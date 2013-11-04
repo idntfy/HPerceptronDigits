@@ -1,11 +1,11 @@
 module Perceptron
-	( Perceptron
-	, create
-	, recognize
-	, teach
-	, getNeuronsCount
-	, getInputsCount
-	)
+    ( Perceptron
+    , create
+    , recognize
+    , teach
+    , getNeuronsCount
+    , getInputsCount
+    )
 where
 
 import qualified Neuron as Neuron
@@ -20,13 +20,13 @@ recognize p xs = map (flip Neuron.transfer xs) p
 
 teach :: Perceptron -> [Int] -> [Int] -> Perceptron
 teach p xs ys
-	| ts == ys = p
-	| otherwise = teach p xs ys
-		where
-			v = 1
-			ts = recognize p xs
-			ds = zipWith (-) ys ts
-			ns = map (\(n, d) -> Neuron.modify n v d xs) $ zip p ds
+    | ts == ys = p
+    | otherwise = teach p xs ys
+        where
+            v = 1
+            ts = recognize p xs
+            ds = zipWith (-) ys ts
+            ns = map (\(n, d) -> Neuron.modify n v d xs) $ zip p ds
 
 getNeuronsCount :: Perceptron -> Int
 getNeuronsCount = length
