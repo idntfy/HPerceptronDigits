@@ -1,4 +1,4 @@
-import qualified Perceptron as Perceptron
+import Teacher
 
 main = do
     return ()
