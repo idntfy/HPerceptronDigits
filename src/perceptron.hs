@@ -21,7 +21,7 @@ recognize p xs = map (flip Neuron.transfer xs) p
 teach :: Perceptron -> [Int] -> [Int] -> Perceptron
 teach p xs ys
     | ts == ys = p
-    | otherwise = teach p xs ys
+    | otherwise = teach ns xs ys
         where
             v = 1
             ts = recognize p xs
