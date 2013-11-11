@@ -5,9 +5,11 @@ module Perceptron
     , teach
     , getNeuronsCount
     , getInputsCount
+    , getDigit
     )
 where
 
+import Image
 import qualified Neuron as Neuron
 
 type Perceptron = [Neuron.Neuron]
@@ -34,3 +36,7 @@ getNeuronsCount = length
 getInputsCount :: Perceptron -> Int
 getInputsCount [] = 0
 getInputsCount p = Neuron.getInputsCount (head p)
+
+getDigit :: [Int] -> Int
+getDigit [] = -1
+getDigit ys = last $ filter (1 ==) ys
