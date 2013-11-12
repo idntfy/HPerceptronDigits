@@ -46,18 +46,22 @@ teachFromImage p (img, path) = P.teach p (buildInVector img) (buildOutVector pat
 -- | Traine existing perceptron by images in path
 -- Image names in directory should has format {targetNumber}.{whatever}.jpg
 teachFromDirectory :: P.Perceptron    -- perceptron to teach
+                   -> Int             -- teaching cycles
                    -> FilePath        -- directory with images
                    -> IO P.Perceptron -- trained perceptron
-teachFromDirectory p path = do
+teachFromDirectory p 0 _ = return p
+teachFromDirectory p times path = do
     imageList <- getImagePaths path >>= getImageList
     let filteredList = filter (imageSizeFilter p) imageList
-    return (foldl teachFromImage p filteredList)
+    let trained = foldl teachFromImage p filteredList
+    teachFromDirectory trained (times - 1) path
 
 -- | Creates perceptron which trained by images in path
 -- Image names in directory should has format {targetNumber}.{whatever}.jpg
 createTrainedPerceptron :: Int             -- neurons count
                         -> Int             -- inputs count
+                        -> Int             -- teaching cycles
                         -> FilePath        -- directory with images
                         -> IO P.Perceptron -- created trained perceptron
-createTrainedPerceptron neurons inputs path = teachFromDirectory p path
+createTrainedPerceptron neurons inputs times path = teachFromDirectory p times path
     where p = P.create neurons inputs

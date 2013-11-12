@@ -58,7 +58,8 @@ getInputsCount p = N.getInputsCount (head p)
 getDigit :: [Int] -- perceptron output
          -> Int   -- output digit
 getDigit [] = -1
-getDigit ys = last $ filter (1 ==) ys -- TODO
+getDigit ys = (dec . length . dropWhile (== 0) . reverse) ys
+    where dec n = n - 1
 
 -- | Opens image file by path and recognizes it by perceptron
 recognizeImageFile :: Perceptron             -- whos recognizes
