@@ -11,35 +11,53 @@ import System.FilePath.Posix
 import Image
 import qualified Perceptron as P
 
-imageSizeFilter :: P.Perceptron -> ImagePath -> Bool
+-- | Predicate
+-- Returns true if width*height of image less
+-- than perceptron inputs
+imageSizeFilter :: P.Perceptron
+                -> ImagePath
+                -> Bool
 imageSizeFilter p (img, _) = w * h <= P.getInputsCount p
     where (w, h) = resolution img
 
-getInVector :: [Int] -> [Int]
-getInVector = map f
+-- | Returns list which accordings to target value
+-- It has 1 on position of number which accordings to it
+-- All other values is 0.
+getOutVector :: P.Perceptron -- target perceptron
+             -> Int          -- target number
+             -> [Int]        -- list which accordings to number
+getOutVector p n = replaceAtIndex n 1 empty
     where
-        f -1 = 0
-        f _  = 1
+        empty = take (P.getNeuronsCount p) (repeat 0)
+        replaceAtIndex n item xs
+            | n >= length xs = xs
+            | otherwise = take n xs ++ [item] ++ drop (n + 1) xs
 
-getOutVector :: P.Perceptron -> Int -> [Int]
-getOutVector p n = a ++ b ++ c
-    where
-        a = replicate (n - 1) 0
-        b = [1]
-        c = replicate (P.getNeuronsCount p - n) 0
-
-teachFromImage :: P.Perceptron -> ImagePath -> P.Perceptron
+-- | Traine existing perceptron by concrete image
+-- Image name should has format {targetNumber}.{whatever}.jpg
+teachFromImage :: P.Perceptron -- perceptron to teach
+               -> ImagePath    -- image sample
+               -> P.Perceptron -- trained perceptron
 teachFromImage p (img, path) = P.teach p (buildInVector img) (buildOutVector path)
     where
-        buildInVector = getInVector . getImageBytes
+        buildInVector = P.normalizeImageData . getImageBytes
         buildOutVector = getOutVector p . read . takeWhile (/= '.') . takeFileName
 
-teachFromDirectory :: P.Perceptron -> FilePath -> IO P.Perceptron
+-- | Traine existing perceptron by images in path
+-- Image names in directory should has format {targetNumber}.{whatever}.jpg
+teachFromDirectory :: P.Perceptron    -- perceptron to teach
+                   -> FilePath        -- directory with images
+                   -> IO P.Perceptron -- trained perceptron
 teachFromDirectory p path = do
     imageList <- getImagePaths path >>= getImageList
     let filteredList = filter (imageSizeFilter p) imageList
     return (foldl teachFromImage p filteredList)
 
-createTrainedPerceptron :: Int -> Int -> FilePath -> IO P.Perceptron
+-- | Creates perceptron which trained by images in path
+-- Image names in directory should has format {targetNumber}.{whatever}.jpg
+createTrainedPerceptron :: Int             -- neurons count
+                        -> Int             -- inputs count
+                        -> FilePath        -- directory with images
+                        -> IO P.Perceptron -- created trained perceptron
 createTrainedPerceptron neurons inputs path = teachFromDirectory p path
     where p = P.create neurons inputs

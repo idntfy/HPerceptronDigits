@@ -5,38 +5,77 @@ module Perceptron
     , teach
     , getNeuronsCount
     , getInputsCount
-    , getDigit
+    , recognizeImageFile
+    , normalizeImageData
     )
 where
 
 import Image
-import qualified Neuron as Neuron
+import qualified Neuron as N
 
-type Perceptron = [Neuron.Neuron]
+-- | Single-layer perceptron it is a list of neurons
+type Perceptron = [N.Neuron]
 
-create :: Int -> Int -> Perceptron
-create n m = take n $ repeat (Neuron.create m 10)
+-- | Create perceptron
+create :: Int        -- neurons count
+       -> Int        -- inputs count
+       -> Perceptron -- created perceptron
+create n m = take n $ repeat (N.create m 10) -- 10 - init weight
 
-recognize :: Perceptron -> [Int] -> [Int]
-recognize p xs = map (flip Neuron.transfer xs) p
+-- | Image recognition
+recognize :: Perceptron -- perceptron to apply
+          -> [Int]      -- input data
+          -> [Int]      -- output image
+recognize p xs = map (flip N.transfer xs) p
 
-teach :: Perceptron -> [Int] -> [Int] -> Perceptron
+-- | Perceptron teaching
+teach :: Perceptron -- perceptron to apply
+      -> [Int]      -- input data
+      -> [Int]      -- target input data
+      -> Perceptron -- trained perceptron
 teach p xs ys
-    | ts == ys = p
-    | otherwise = teach ns xs ys
+    | ts == ys = p               -- quit training if perceptron runs up to target output 
+    | otherwise = teach ns xs ys -- continue training
         where
-            v = 1
-            ts = recognize p xs
-            ds = zipWith (-) ys ts
-            ns = map (\(n, d) -> Neuron.modify n v d xs) $ zip p ds
+            v = 1                  -- speed of teaching
+            ts = recognize p xs    -- current perceptron output
+            ds = zipWith (-) ys ts -- difference between perceptron output and target output
+            ns = map mn $ zip p ds -- teach all neurons with new diff and input
+                where mn (n, d) = N.modify n v d xs
 
-getNeuronsCount :: Perceptron -> Int
+-- | Gets neurons count
+getNeuronsCount :: Perceptron -- perceptron to apply
+                -> Int        -- neurons count
 getNeuronsCount = length
 
-getInputsCount :: Perceptron -> Int
+-- | Gets perceptron inputs count
+getInputsCount :: Perceptron -- perceptron to apply
+               -> Int        -- inputs count
 getInputsCount [] = 0
-getInputsCount p = Neuron.getInputsCount (head p)
+getInputsCount p = N.getInputsCount (head p)
 
-getDigit :: [Int] -> Int
+-- | Gets last index of 1 in neuron output
+getDigit :: [Int] -- perceptron output
+         -> Int   -- output digit
 getDigit [] = -1
-getDigit ys = last $ filter (1 ==) ys
+getDigit ys = last $ filter (1 ==) ys -- TODO
+
+-- | Opens image file by path and recognizes it by perceptron
+recognizeImageFile :: Perceptron             -- whos recognizes
+                   -> FilePath               -- image path to recognize
+                   -> IO (Either String Int) -- Error or recognized digit
+recognizeImageFile p path = do
+    imageOrError <- getImageOrError path
+    return (buildReturn imageOrError)
+    where
+        buildReturn (Left err, _) = Left err
+        buildReturn (Right img, _) = Right (recognizeImage img)
+        recognizeImage = getDigit . recognize p . normalizeImageData . getImageBytes
+
+-- | Normalizes image data
+-- Converts white color to 0, other colors to 1
+normalizeImageData :: [Int] -> [Int]
+normalizeImageData = map f
+    where
+        f 255 = 0
+        f _  = 1
