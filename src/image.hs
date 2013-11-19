@@ -4,6 +4,7 @@ module Image
     , getImageList
     , getImageOrError
     , getImageBytes
+    , isRight
     )
 where
 
@@ -24,12 +25,12 @@ getImagePaths dir = do
 
 -- | Build full path list from list of images and dir path
 buildImagePaths :: FilePath -> [FilePath] -> [FilePath]
-buildImagePaths dir = filter jpgFilter . map (combine dir)
+buildImagePaths dir = filter bmpFilter . map (combine dir)
 
 -- | Predicate
 -- Returns true if file has ".jpg" extension
-jpgFilter :: FilePath -> Bool
-jpgFilter = (== ".jpg") . takeExtension
+bmpFilter :: FilePath -> Bool
+bmpFilter = (== ".bmp") . takeExtension
 
 -- | Returns list of images from list of some files
 getImageList :: [FilePath] -> IO [ImagePath]
